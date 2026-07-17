@@ -1,0 +1,16 @@
+BASELINES = (
+    "fedprox",
+    "fed-ewc",
+    "fed-lwf",
+    "fed-replay",
+    "fed-gpm",
+    "fed-olora",
+    "fed-keeplora",
+    "fed-splitlora",
+    "fed-moelora",
+    "fed-smolora",
+    "fed-mode",
+    "fed-pclr",
+    "fed-eproj",
+    "fed-duet",
+)
