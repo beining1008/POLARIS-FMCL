@@ -4,7 +4,7 @@ Code for the paper *Exposing and Resolving Spurious Isolation in Federated Multi
 
 POLARIS (Per-expert Orthogonal Landscape-Aware Routing-Informed Subspace protection) maintains a per-expert protection basis in the gradient subspace from routing-weighted covariance, merges client bases through an orthogonality-preserving federated union (PE-FOSU), reads per-layer protection budgets from an online interference landscape through capped water-filling, and anneals projection strength during each task's warmup window.
 
-The release covers the complete method layer: every projection, covariance, aggregation, scheduling, and routing mechanism of POLARIS and of the fourteen comparison methods is implemented as evaluated. Backbone loading, tokenizers, and dataset pipelines are declared as interfaces in `models/` and `data/`, and the activation capture that several baselines build their subspaces and exemplars from belongs to the same interface layer. The full training and evaluation pipeline will be released upon acceptance.
+The release covers the complete method layer: every projection, covariance, aggregation, scheduling, and routing mechanism of POLARIS and of the fourteen comparison methods is implemented as evaluated.
 
 ## Layout
 
@@ -13,12 +13,12 @@ polaris/     POLARIS: routing-weighted covariance, PE-FOSU union, bilateral proj
              online interference estimation, capped water-filling scheduler, training lifecycle
 harness/     shared federated continual-learning harness: method interface, FedAvg,
              task-sequence runner, AA/BWT/FWT metrics, method registry
-models/      backbone specs and loading interfaces; shared MoE-LoRA adapter (experts, routers, injection)
-data/        CoIN-6 and CoIN-Long-10 task streams (loader interfaces); Dirichlet partitioner
+models/      backbone specs; shared MoE-LoRA adapter (experts, routers, injection)
+data/        CoIN-6 and CoIN-Long-10 task streams; Dirichlet partitioner
 baselines/   the fourteen comparison methods, one directory each
 ```
 
-Every method implements the same interface (`harness/interfaces.py`) and runs under the same protocol: C = 5 clients, Dirichlet partition, one FedAvg round per task with one local epoch per client, AdamW at 2e-4 under cosine decay. POLARIS trains E = 4 experts at rank r = 8 with top-1 routing; every baseline matches this adapter budget, and a baseline whose paper publishes its own routing or adapter form (dense gating in Fed-MoELoRA, the rank pool of Fed-PCLR, the dual pathways of Fed-MoDE and Fed-Duet) keeps that form at the same budget. Adapters attach to the square attention projections (`q_proj`, `o_proj`) that carry the protection mechanics; the payload table in the paper measures the experiments' full adapter placement, which is broader than this module set, so those megabyte figures are not recomputable from this repository alone.
+Every method implements the same interface (`harness/interfaces.py`) and runs under the same protocol: C = 5 clients, Dirichlet partition, one FedAvg round per task with one local epoch per client, AdamW at 2e-4 under cosine decay. POLARIS trains E = 4 experts at rank r = 8 with top-1 routing; every baseline matches this adapter budget, and a baseline whose paper publishes its own routing or adapter form (dense gating in Fed-MoELoRA, the rank pool of Fed-PCLR, the dual pathways of Fed-MoDE and Fed-Duet) keeps that form at the same budget. Adapters attach to the square attention projections (`q_proj`, `o_proj`) that carry the protection mechanics; the payload table in the paper measures the complete adapter placement of the experiments, which extends beyond the attention projections.
 
 ## Baselines
 
