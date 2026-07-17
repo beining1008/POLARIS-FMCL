@@ -105,6 +105,10 @@ class Polaris(FederatedMethod):
         model.train()
         adapters = dict(iter_adapters(model))
         self._ensure_budgets(adapters)
+        if task_id >= 1:
+            for adapter in adapters.values():
+                for parameter in adapter.router.parameters():
+                    parameter.requires_grad_(False)
         bank = self._client_banks.setdefault(client_id, CovarianceBank(self.config.num_experts))
         steps_per_epoch = len(loader)
         total_steps = steps_per_epoch * self.config.local_epochs
@@ -223,6 +227,7 @@ class Polaris(FederatedMethod):
                                 "spectral_cut": result.spectral_cut,
                                 "retained_variance_ratio": result.retained_variance_ratio,
                                 "carry_over_residual": result.carry_over_residual,
+                                "retention_bound": result.retention_bound,
                             }
                             for key, result in self.aggregator.last_diagnostics.items()
                         },

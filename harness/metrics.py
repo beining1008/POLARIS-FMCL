@@ -9,6 +9,7 @@ class AccuracyMatrix:
         self.values: List[List[Optional[float]]] = [
             [None for _ in range(num_tasks)] for _ in range(num_tasks)
         ]
+        self.zero_shot: Optional[List[float]] = None
 
     def record(self, after_task: int, eval_task: int, accuracy: float) -> None:
         self.values[after_task][eval_task] = accuracy
@@ -31,7 +32,8 @@ class AccuracyMatrix:
         return sum(deltas) / (self.num_tasks - 1)
 
     def forward_transfer(self) -> float:
-        gains = [self.entry(j - 1, j) for j in range(1, self.num_tasks)]
+        baseline = self.zero_shot if self.zero_shot is not None else [0.0] * self.num_tasks
+        gains = [self.entry(j - 1, j) - baseline[j] for j in range(1, self.num_tasks)]
         return sum(gains) / (self.num_tasks - 1)
 
     def summary(self) -> dict:

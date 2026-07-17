@@ -34,6 +34,9 @@ class FederatedContinualRunner:
         tokenizer = load_tokenizer(self.backbone_spec)
         models = [self.method.build_model() for _ in range(cfg.num_clients)]
         server_model = self.method.build_model()
+        self.matrix.zero_shot = [
+            self.evaluate(server_model, tokenizer, task) for task in self.tasks
+        ]
 
         for task_id, task in enumerate(self.tasks):
             loaders = build_client_loaders(

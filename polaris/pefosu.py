@@ -13,6 +13,7 @@ class SubspaceUnionResult:
     spectral_cut: float
     retained_variance_ratio: float
     carry_over_residual: float
+    retention_bound: float
 
 
 class PEFOSUAggregator:
@@ -55,12 +56,21 @@ class PEFOSUAggregator:
         if carry_basis is not None:
             projector_residual = carry_basis - new_basis @ (new_basis.transpose(0, 1) @ carry_basis)
             carry_residual = float(projector_residual.norm(dim=0).square().max())
+        retention_bound = 0.0
+        if carry_eigenvalues is not None and carry_eigenvalues.numel() > 0:
+            leading = float(new_eigenvalues[0]) if new_eigenvalues.numel() > 0 else 0.0
+            carry_floor = float(carry_eigenvalues.min())
+            if carry_floor <= spectral_cut or leading <= spectral_cut:
+                retention_bound = 1.0
+            else:
+                retention_bound = max(0.0, (leading - carry_floor) / (leading - spectral_cut))
         result = SubspaceUnionResult(
             basis=new_basis,
             eigenvalues=new_eigenvalues,
             spectral_cut=spectral_cut,
             retained_variance_ratio=retained_ratio,
             carry_over_residual=carry_residual,
+            retention_bound=retention_bound,
         )
         self.bases[key] = new_basis
         self.eigenvalues[key] = new_eigenvalues
