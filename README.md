@@ -22,7 +22,7 @@ Every method implements the same interface (`harness/interfaces.py`) and runs un
 
 ## Baselines
 
-Non-federated methods are federated by applying FedAvg to their local update rule with the authors' default hyperparameters; every method uses the same adapter budget as POLARIS.
+Non-federated methods are federated by applying FedAvg to their local update rule with the authors' default hyperparameters; every method uses the same adapter budget as POLARIS. The Code column records how each method entered the experiments; the per-method notes below describe the implementation shipped in `baselines/`.
 
 | Baseline | Venue | Code | Federated adaptation |
 |---|---|---|---|
