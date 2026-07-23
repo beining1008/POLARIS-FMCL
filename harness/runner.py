@@ -61,7 +61,7 @@ class FederatedContinualRunner:
                 self.method.set_broadcast(package)
             self.method.on_task_end(task_id, payloads)
             self._sync_server_model(server_model)
-            for eval_task_id in range(task_id + 1):
+            for eval_task_id in range(len(self.tasks)):
                 accuracy = self.evaluate(server_model, tokenizer, self.tasks[eval_task_id])
                 self.matrix.record(task_id, eval_task_id, accuracy)
         return self.matrix

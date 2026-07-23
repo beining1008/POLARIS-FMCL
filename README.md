@@ -16,9 +16,25 @@ harness/     shared federated continual-learning harness: method interface, FedA
 models/      backbone specs; shared MoE-LoRA adapter (experts, routers, injection)
 data/        CoIN-6 and CoIN-Long-10 task streams; Dirichlet partitioner
 baselines/   the fourteen comparison methods, one directory each
+train.py     experiment entry point: config assembly, task-sequence run, results serialization
+scripts/     run enumerations: main table, POLARIS rows, Dirichlet sweep
 ```
 
 Every method implements the same interface (`harness/interfaces.py`) and runs under the same protocol: C = 5 clients, Dirichlet partition, one FedAvg round per task with one local epoch per client, AdamW at 2e-4 under cosine decay. POLARIS trains E = 4 experts at rank r = 8 with top-1 routing; every baseline matches this adapter budget, and a baseline whose paper publishes its own routing or adapter form (dense gating in Fed-MoELoRA, the rank pool of Fed-PCLR, the dual pathways of Fed-MoDE and Fed-Duet) keeps that form at the same budget. Adapters attach to the square attention projections (`q_proj`, `o_proj`) that carry the protection mechanics; the payload table in the paper measures the complete adapter placement of the experiments, which extends beyond the attention projections.
+
+## Running
+
+```
+pip install -r requirements.txt
+
+python train.py --method polaris --backbone llava-1.5-7b --benchmark coin6 --beta 0.3 --seed 0
+
+bash scripts/run_polaris.sh llava-1.5-7b coin-long10
+bash scripts/run_main_table.sh llava-1.5-7b coin6
+bash scripts/run_beta_sweep.sh qwen2.5-vl-7b
+```
+
+`train.py` resolves the method through `harness/registry.py`, drives the task sequence with `harness/runner.py`, and writes the zero-shot row, the accuracy matrix, and the AA/BWT/FWT summary to `results/`. The scripts enumerate the runs behind the main table (fifteen methods, three seeds), the POLARIS rows, and the Dirichlet sweep; `--experts` and `--top-k` select the routing configurations of the diagnostic sweeps.
 
 ## Baselines
 
