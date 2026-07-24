@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 from harness.aggregation import extract_trainable, fedavg, load_weights
-from harness.interfaces import BroadcastPackage, ClientPayload, FederatedMethod
+from harness.interfaces import BroadcastPackage, ClientPayload, FederatedMethod, TensorDict
 from models.backbone import load_backbone
 from models.moe_lora import MoELoRALinear, inject_moe_lora, iter_adapters, layer_label
 from polaris.covariance import CovarianceBank, merge_pooled_matrices
@@ -45,6 +45,7 @@ class Polaris(FederatedMethod):
         self._budgets: Dict[str, int] = {}
         self._per_task_ranks: Dict[str, int] = {}
         self._active_task: int = 0
+        self._theta_names: Set[str] = set()
 
     def build_model(self) -> nn.Module:
         model = load_backbone(self.backbone_spec, self.config.resolve_dtype())
@@ -57,7 +58,18 @@ class Polaris(FederatedMethod):
             top_k=self.config.top_k,
             routing=self.config.routing,
         )
+        self._theta_names = {
+            name for name, parameter in model.named_parameters() if parameter.requires_grad
+        }
         return model
+
+    def _extract_theta(self, model: nn.Module) -> TensorDict:
+        if not self._theta_names:
+            return extract_trainable(model)
+        named = dict(model.named_parameters())
+        return {
+            name: named[name].detach().clone() for name in self._theta_names if name in named
+        }
 
     def on_task_start(self, task_id: int) -> None:
         self._active_task = task_id
@@ -136,7 +148,7 @@ class Polaris(FederatedMethod):
         return ClientPayload(
             client_id=client_id,
             num_samples=len(loader.dataset),
-            weights=extract_trainable(model),
+            weights=self._extract_theta(model),
             stats=statistics,
         )
 
